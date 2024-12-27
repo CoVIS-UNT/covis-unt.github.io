@@ -1,0 +1,48 @@
+$(document).ready(function () {
+  // Execute menu functions after body loads
+
+  // Menu arrow JS
+  var menuItems = document.querySelectorAll('li.has-dropdown');
+  Array.prototype.forEach.call(menuItems, function (el, i) {
+    var activatingA = el.querySelector('a');
+    var btn = `<button aria-label="Expand this menu"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-caret-down fa-w-10"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z" class=""></path></svg></button>`;
+    activatingA ? activatingA.insertAdjacentHTML('afterend', btn) : ''
+    if (el.querySelector('button')) {
+      el.querySelector('button').addEventListener("click", function (event) {
+        if (this.parentNode.className == "has-dropdown main-menu-link self-end relative open") {
+          this.parentNode.className = "has-dropdown main-menu-link self-end relative";
+          this.parentNode.querySelector('a').setAttribute('aria-expanded', "false");
+          this.parentNode.querySelector('button').setAttribute('aria-expanded', "false");
+        } else {
+          this.parentNode.className = "has-dropdown main-menu-link self-end relative open";
+          this.parentNode.querySelector('a').setAttribute('aria-expanded', "true");
+          this.parentNode.querySelector('button').setAttribute('aria-expanded', "true");
+        }
+        event.preventDefault();
+      });
+    }
+  });
+
+  // Menu 2
+  var menuItems2 = document.querySelectorAll('div.has-dropdown');
+  Array.prototype.forEach.call(menuItems2, function (el, i) {
+    var activatingB = el.querySelector('span');
+    var btn = `<button aria-label="Expand this menu"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-caret-down fa-w-10"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z" class=""></path></svg></button>`;
+    activatingB ? activatingB.insertAdjacentHTML('afterend', btn) : ''
+    if (el.querySelector('button')) {
+      el.querySelector('button').addEventListener("click", function (event) {
+        if (this.parentNode.classList.contains("open")) {
+          this.parentNode.classList.remove("open");
+          this.parentNode.querySelector('a').setAttribute('aria-expanded', "false");
+          this.parentNode.querySelector('button').setAttribute('aria-expanded', "false");
+        } else {
+          this.parentNode.classList.add("open");
+          this.parentNode.querySelector('a').setAttribute('aria-expanded', "true");
+          this.parentNode.querySelector('button').setAttribute('aria-expanded', "true");
+        }
+        event.preventDefault();
+      });
+    }
+  });
+
+});

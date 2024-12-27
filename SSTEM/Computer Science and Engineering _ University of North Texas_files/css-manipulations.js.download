@@ -1,0 +1,19 @@
+
+// This applys any style="..." that is on either an ol or ul to all subsequent li's
+// Select all <ol> and <ul> elements with a style attribute
+var lists = document.querySelectorAll('ol[style], ul[style]');
+
+// Iterate over the selected elements
+lists.forEach(function(list) {
+  // Get the style attribute value of the list element
+  var listStyle = list.getAttribute('style');
+
+  // Select all <li> elements within the current list
+  var listItems = list.querySelectorAll('li');
+
+  // Apply the style of the list to each <li> element
+  listItems.forEach(function(li) {
+    // Set the style attribute of the <li> to match the list style
+    li.setAttribute('style', listStyle);
+  });
+});

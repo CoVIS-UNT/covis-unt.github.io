@@ -1,0 +1,29 @@
+_debugLog('sniffer loaded');
+//const menu = $('.main-menu-wrapper ul.main-menu').width();
+const menuWidth = document.getElementsByClassName('main-menu')[0].offsetWidth
+const viewportWidth = window.innerWidth
+
+_debugLog('menu width: ' + menuWidth)
+_debugLog('viewport width: ' + viewportWidth)
+
+$(document).ready(function () {
+
+  window.addEventListener("resize", (event) => {
+
+    const menuWidth = document.getElementsByClassName('main-menu')[0].offsetWidth
+    const shimWidth = document.getElementsByClassName('main-menu-shim')[0].offsetWidth
+    // const menuAndShimWidth = menuWidth + shimWidth + 50; // added 50 for padding
+    const menuAndShimWidth = menuWidth + shimWidth + 20; // added 50 for padding
+    const viewportWidth = window.innerWidth
+    // const divList = $('.topbar, .header-wrapper, unt-logo, .main-menu-wrapper, .mobile-menu nav-items')
+    const divList = $('.page-wrapper')
+
+    // check menu width vs. viewport width 
+    if (menuAndShimWidth >= viewportWidth) {
+      // add "main-menu-overflow" class if menu overflows viewport
+      divList.addClass('main-menu-overflow')
+    } else {
+      divList.removeClass('main-menu-overflow')
+    }
+  });
+});

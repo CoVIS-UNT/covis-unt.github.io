@@ -1,0 +1,13 @@
+(function($) {
+  $(function(){
+    $(window).on('load resize', function () {
+      var divWidth = $(".height-width").width();
+      $('.height-width').each(function () {
+        if ($(this).width() !== divWidth) {
+          $(this).width(divWidth);
+        }
+        $(this).height(divWidth);
+      })
+    });
+  });
+})(jQuery);

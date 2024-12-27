@@ -1,0 +1,26 @@
+let _debug = {
+  state: false,
+}
+
+// function debugLog(message, debugMode) {
+//   if (debugMode) {
+//     console.log(message);
+//   }
+// }
+
+function _debugLog(message){
+	if (typeof _debug.state !== 'undefined') {
+		if(_debug.state){
+			console.log('[debug]: ' + message);
+		}
+	} else {
+		console.log('config debug, not defined.')
+	}
+}
+
+
+function isStringEmptyOrUndefined(a){
+	return a ==="" || typeof a === 'undefined';
+}
+
+console.log("👋 Welcome to the UNT web console 🦅🦅🦅");
