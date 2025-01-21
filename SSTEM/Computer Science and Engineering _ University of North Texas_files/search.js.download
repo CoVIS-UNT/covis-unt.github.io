@@ -1,0 +1,456 @@
+let el_distro = document.querySelectorAll('div.header-distro');
+let el_fb_partial = document.querySelectorAll('div.fb-container.fb-partial');
+
+let _config = {
+  is_www: false,
+  is_distro: false,
+  is_search: false,
+  is_fb_partial: false,
+  site_scope: null,
+  site_scope_clean: null,
+  search_context: null,
+  debug: false,
+}
+
+function debugLog(message, debugMode) {
+  if (debugMode) {
+    console.log(message);
+  }
+}
+
+
+//initialize the current site
+const original_host = window.location.host;
+//remove "dev--" prefix from host if exists.
+_config.site_scope = original_host;
+_config.site_scope_clean = original_host.replace("dev--", "").replace("www.","");
+
+
+
+// const site_scope = window.location.host;
+// check to see if we are on www, if so - set the search context to all sites.
+
+if(_config.site_scope === "www.unt.edu"){
+  _config.search_context = "all_sites";
+  _config.is_www = true;
+}
+else if(_config.site_scope === "search.unt.edu"){
+  _config.is_search = true;
+  _config.search_context = "all_sites";
+}
+else{
+  _config.search_context = "this_site";
+  $('#radio-one').click();
+}
+
+
+// console.log('Welcome to the UNT console!')
+
+debugLog('[Debug]: _config.is_www = ' + _config.is_www, _config.debug)
+debugLog('[Debug]: site scope is = ' + _config.site_scope, _config.debug)
+debugLog('[Debug]: _config.search_context is = ' + _config.search_context, _config.debug)
+
+
+if (checkQueryParam('form', 'partial')){
+	if(checkQueryParam('scope',_config.site_scope)){
+	  $('#fb-radio-1').click()
+// 		$('#radio-1').click();
+	}
+	if(checkQueryParam('scope','unt.edu')){
+	  $('#fb-radio-2').click()
+// 		$('#radio-2').click();
+	}
+  debugLog('[Debug]: This page has parameters form=partial',_config.debug)
+}
+
+//branding vars must be initialized as null, the el_distro conditional check will determine if these get used.
+// this prevents the script from breaking in the tabbing procedure.
+let branding = null;
+let branding_first_child = null;
+
+//Variables for tab behavior based on header type.
+let main_menu_wrapper = document.querySelector('.main-menu-wrapper');
+let radio_wrapper = document.querySelector('.radio-wrapper');
+let funnelback_search_container = document.querySelector('.search-container');
+let tab_trigger_el_label = 'search-container';    //default, will change in distro-type
+let tab_trigger_el = funnelback_search_container.lastChild; //default, will change in distro-type
+let fb_partial_form_scope = document.querySelector('.fb-partial form input[name="scope"]');
+
+
+if(el_distro.length > 0){
+  _config.is_distro = true;
+  branding = document.querySelector('.branding');
+  branding_first_child = branding.firstChild;
+  tab_trigger_el_label = 'radio-wrapper';
+  tab_trigger_el = radio_wrapper;
+}
+
+if(el_fb_partial.length > 0){
+	_config.is_fb_partial = true;
+}
+
+
+
+debugLog('[distro-header]: ' + _config.is_distro, _config.debug);
+
+
+$('#radio-1').on('click', () => {
+  debugLog('radio1 clicked', _config.debug);
+  $("#radio-one").prop("checked", true);
+  _config.search_context = 'this_site';
+  if(_config.is_fb_partial){
+	  	  fb_partial_form_scope.setAttribute('value', _config.site_scope_clean); 
+	      $("#fb-radio-1").prop("checked", true);
+  }
+  debugLog('search context = '+ _config.search_context, _config.debug);
+})
+
+$('#radio-2').on('click', () => {
+  debugLog('radio2 clicked', _config.debug);
+  $("#radio-two").prop("checked", true);
+  _config.search_context = 'all_sites';
+  if(_config.is_fb_partial){
+	  	  fb_partial_form_scope.setAttribute('value', 'unt.edu'); 
+	      $("#fb-radio-2").prop("checked", true);
+  }
+  debugLog('search context = '+ _config.search_context, _config.debug);
+
+})
+
+$('#radio-one').on('click', () => {
+  debugLog('mobile radio-one clicked',_config.debug);
+  _config.search_context = 'this_site';
+  $("#radio-1").prop("checked", true);
+  debugLog('search context = '+ _config.search_context, _config.debug);
+
+})
+
+$('#radio-two').on('click', () => {
+  debugLog('mobile radio-two clicked', _config.debug);
+  _config.search_context = 'all_sites';
+  $("#radio-2").prop("checked", true);
+  debugLog('search context = '+ _config.search_context, _config.debug);
+})
+
+if(_config.is_fb_partial){
+	
+	
+	$('#fb-radio-1').on('click', () => {
+	  debugLog('fb partial radio-1 clicked',_config.debug);
+	  _config.search_context = 'this_site';
+	  $("#fb-radio-1").prop("checked", true);
+	  $("#radio-1").prop("checked", true);
+	  fb_partial_form_scope.setAttribute('value', _config.site_scope_clean); 
+	  debugLog('search context = '+ _config.search_context, _config.debug);
+
+	})
+	
+	$('#fb-radio-2').on('click', () => {
+	  debugLog('fb partial radio-2 clicked',_config.debug);
+	  _config.search_context = 'all_sites';
+	  $("#fb-radio-2").prop("checked", true);
+	  $("#radio-2").prop("checked", true);
+	  fb_partial_form_scope.setAttribute('value','unt.edu'); 
+	  debugLog('search context = '+ _config.search_context, _config.debug);
+
+	})
+}
+
+
+const searchDropdownEl = document.getElementById('searchdropdown');
+let searchDropdownHeight = '-' + document.getElementById('searchdropdown').offsetHeight + 'px';
+searchDropdownEl.style.marginTop = searchDropdownHeight;
+let toggled = false
+
+$(document).ready(function () {
+  searchDropdownHeight = '-' + document.getElementById('searchdropdown').offsetHeight + 'px';
+  document.getElementById('searchdropdown').style.marginTop = searchDropdownHeight;
+
+});
+
+$(window).resize(function () {
+  searchDropdownHeight = '-' + document.getElementById('searchdropdown').offsetHeight + 'px';
+  searchDropdownEl.style.marginTop = searchDropdownHeight;
+});
+
+
+// function searchDropdownClose() {
+//   const searchDropdownHeight = '-' + document.getElementById('searchdropdown').offsetHeight + 'px';
+//   searchDropdownEl.style.marginTop = searchDropdownHeight;
+// }
+
+
+function searchDropdownToggle(value) {
+  searchDropdownHeight = '-' + document.getElementById('searchdropdown').offsetHeight + 'px';
+  document.getElementById('searchdropdown').classList.toggle('slide-in', value);
+  if(value){ //true
+    debugLog("Triggered the search toggle ON", _config.debug)
+    document.getElementById('searchdropdown').style.display ="block";
+    document.getElementById('searchdropdown').classList.add("slide-in-enter");
+    document.getElementById("search-toggle-close-btn").focus();
+  }
+  else{ //false
+    debugLog("Triggered the search toggle OFF", _config.debug)
+    document.getElementById('searchdropdown').style.display ="none";
+    document.getElementById('searchdropdown').style.marginTop ="";
+    document.getElementById('searchdropdown').classList.remove("slide-in-enter");
+    try{
+      document.getElementById("search-toggle-btn").focus();
+    }
+    catch (err){
+      debugLog('DEBUG => search-toggle-btn class does not exist.' + err, _config.debug)
+    }
+
+    try{
+      document.getElementById('search-toggle-close-btn').focus();
+    }
+    catch (err){
+      debugLog('DEBUG => search-toggle-close-btn class does not exist ' + err, _config.debug)
+    }
+
+  }
+}
+
+
+$('.search-toggle-close').on('click', (e) => {
+  searchDropdownToggle(false)
+  e.stopPropagation();
+  e.preventDefault(); // prevent the default action
+})
+
+$('.search-toggle').on('click', (e) => {
+  searchDropdownToggle(true)
+  e.stopPropagation();
+  e.preventDefault(); // prevent the default action
+// }).on('keydown', onCloseKeyDown);
+}).on('keydown');
+
+//This will attach an event listener to the searchdropdown container and allow us to close at any point inside the
+//container by pressing the "Escape" key.
+let searchContainer = document.querySelector('#searchdropdown');
+
+
+document.body.addEventListener('keyup', function (event){
+  if(searchContainer.contains(event.target) && (event.key==="Escape")){
+    // debugLog("we pressed the ESC key inside the search container", _config.debug);
+    searchDropdownToggle(false)
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+
+
+  /*
+  * This section handle's the behavior of the tabbing order.
+  *
+  * tab_trigger_el_label is the string representation of the target element's class.
+  * tab_trigger_el is the actual HTML element that we want to target.
+  *
+  * The logic is to add a listener to the target, once the user tabs
+  *
+  * */
+
+
+  // debugLog("we are on: " + document.activeElement.parentElement.className, _config.debug)
+  if(document.activeElement.parentElement.className === tab_trigger_el_label){
+    // debugLog('DEBUG => we are inside the ' + tab_trigger_el_label, _config.debug);
+    tab_trigger_el.addEventListener('keydown', function (e){
+      // debugLog("DEBUG: Our tab_trigger_el is => " +tab_trigger_el.className , _config.debug)
+
+
+      /*
+      * Ignore keyboard events with Shift & Tab pressed at the same time. This prevents the following
+      * code section from running.
+      * */
+
+      if(e.shiftKey && e.key ==="Tab"){
+        debugLog('ignore, this is shift and tab',_config.debug);
+      }
+
+      else if(e.key ==="Tab" && document.activeElement.parentElement.nextElementSibling === null){
+        searchDropdownToggle(false); //auto-close the search container
+        /*
+        * Distro header will not have certain elements and the layout order is different.
+        * The following conditions will ensure the right behavior is followed.
+        * The default behavior resets the focus point to the beginning of the DOM, due to the
+        * way the page headers/search were constructed.
+        *
+        * If new elements or if the structure of the header/search changes, this block will need
+        * to be updated.
+        *
+        * variables within the scope of these blocks are initialized earlier in the script
+        * based on the type of header is loading this script.
+        * */
+
+        if(_config.is_distro){
+          /*
+          * branding class' first child element is .unt-logo.
+          * */
+          branding_first_child.focus();
+        }
+        else{
+          /*
+          * main-menu-wrapper class is the next order.
+          * */
+          main_menu_wrapper.focus();
+        }
+      }
+
+    })
+  }
+
+
+})
+
+
+
+
+
+const fb_search_field = document.getElementById("funnelback-search");
+const fb_partial_search_field = document.querySelector(".fb-partial #query");
+const hero_search_field = document.getElementById("unt-home-search");
+const mobile_search_field = document.getElementById("mobile-search");
+const fb_seu_field = document.getElementById('query');
+
+const fb_search_btn = document.querySelector('.funnelback-search-button');
+const fb_partial_search_btn = document.querySelector('.fb-partial button[type="submit"]');
+const hero_search_btn = document.querySelector('.home-search-button');
+const mobile_search_btn = document.querySelector('.mobile-search-button');
+let query_el = '';
+
+//funnelback top search
+if(fb_search_field){
+  fb_search_field.addEventListener('keydown', function(e){
+    if(e.key === "Enter"){
+      fb_search_btn.click();
+      debugLog("i pressed enter!", _config.debug)
+    }
+  })
+}
+
+if(fb_partial_search_field){
+  fb_partial_search_field.addEventListener('keydown', function(e){
+    if(e.key === "Enter"){
+      fb_partial_search_btn.click();
+      debugLog("i pressed enter!", _config.debug)
+    }
+  })
+}
+
+if(hero_search_field){
+  hero_search_field.addEventListener('keydown', function(e){
+    if(e.key === "Enter"){
+      hero_search_btn.click();
+    }
+  })
+}
+
+if(mobile_search_field){
+  mobile_search_field.addEventListener('keydown', function(e){
+    if(e.key === "Enter"){
+      mobile_search_btn.click();
+    }
+  })
+}
+
+if (fb_seu_field) {
+  debugLog('[detected funnelback]', _config.debug);
+  $('body').addClass('fb-search-page');
+  $('.content-wrapper').css('max-width', '100vw');
+  $('#custom__filter').remove();
+  $('.module-filter__wrapper').addClass('items-center');
+  $('.module-filter__wrapper li').css('margin', '0');
+  $('.module-filter__item').addClass('list-none');
+}
+
+
+/*
+* Funnelback search support
+* */
+
+
+if(fb_search_btn){
+  fb_search_btn.addEventListener('click', function () {
+    query_el = document.getElementById('funnelback-search').value;
+    sendToSearch(query_el)
+  })
+}
+
+if(fb_partial_search_btn){
+  fb_partial_search_btn.addEventListener('click', function () {
+    query_el = document.getElementById('query').value;
+    sendToSearch(query_el)
+  })
+}
+
+if(hero_search_btn){
+  hero_search_btn.addEventListener('click', function () {
+    query_el = document.getElementById('unt-home-search').value;
+    sendToSearch(query_el)
+  })
+}
+
+if(mobile_search_btn){
+  mobile_search_btn.addEventListener('click', function () {
+    query_el = document.getElementById('mobile-search').value;
+    sendToSearch(query_el)
+  })
+}
+
+function checkQueryParam(param, value) {
+  var url = window.location.href;
+  var queryString = url.substring(url.indexOf('?') + 1);
+  var params = queryString.split('&');
+
+  for (var i = 0; i < params.length; i++) {
+    var pair = params[i].split('=');
+    var key = decodeURIComponent(pair[0]);
+    var decodedValue = decodeURIComponent(pair[1]);
+
+    if (key === param) {
+      if (value === undefined || decodedValue === value) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+function sendToSearch(query){
+  //remove all trailing and leading whitespace characters, prevents string pollution.
+  query = query.trim()
+  //if after trimming, there is no non-whitespace characters, then default the query to global search.
+  if(!query){
+    query = "!showall";
+  }
+  //clean the input values, replace spaces with "+" as expected in mstoner's env.
+  query = encodeURIComponent(query).replace(/%20/g, "+")
+  //further clean input values where user adds multiple spaces between characters.
+  query = query.replace(/(\+){2,}/g, "+");
+
+  //Check if we are in www, this will determine where we redirect the user to.
+  if(_config.is_www){
+    //For now users on www will be redirected to search.unt.edu
+    window.location.href = "https://search.unt.edu/s/search.html?collection=uni-nt-search&query=" + query;
+  }
+  else if(_config.is_search){
+	window.location.href = "https://search.unt.edu/s/search.html?collection=uni-nt-search&query=" + query;
+
+  }
+  //All other sites will redirect to a partial search script within their own site.
+  else{
+
+    //this section handles searching the context of the current site.
+    if(_config.search_context === "this_site"){
+      window.location.href= "https://"+ _config.site_scope + "/search.html?collection=uni-nt-search&scope="+ _config.site_scope_clean + "&form=partial&f.Tabs|AllDocumentsFill=All Results&query=" + query;
+    }
+    //this section handles search all of unt.
+    else {
+      window.location.href = "https://" + _config.site_scope + "/search.html?collection=uni-nt-search&form=partial&scope=unt.edu&f.Tabs|AllDocumentsFill=All Results&query=" + query;
+    }
+  }
+
+
+}

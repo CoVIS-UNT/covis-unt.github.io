@@ -1,0 +1,243 @@
+
+// Sidenav.js
+/*
+This section aims to solve functionality for sidebar navigation and accessibility controls.
+latest version update: improved keyboard accessibility, multi-side navs supported, dynamic context for
+screen readers on menus including sub menus. Dynamic state handling added to menus for consistent experience.
+* */
+let leftside_content_id = null;
+let does_leftside_content_id_exist = null;
+
+$(document).ready(function (node, child) {
+
+    const _is_active = true;
+
+    _debug.state = false;
+    if(!_is_active){_debugLog('sidenav.js loaded, but inactive.');}
+    else{_debugLog('sidenav.js loaded and active.');}
+
+
+    if(_is_active){
+        _debug.state = false;
+        ConvertSideBarContent();
+
+        const minWidth = 900; // Set the minimum width you want to check for
+        let desktopMode = null;
+        //variables
+        const left_sidebar_button = $(".sidebar-menu-toggle");
+        const left_sidebar_menu = $(".sidebar-menu");
+
+        // Function to check the window width
+        function checkWidth() {
+            if ($(window).width() >= minWidth) {
+                _debugLog("The screen width is greater than or equal to " + minWidth + " pixels.");
+                desktopMode = true;
+                RunDesktopMode();
+                // Add your code here to execute when the condition is true
+            } else {
+                _debugLog("The screen width is not greater than " + minWidth + " pixels.");
+                desktopMode = false;
+                RunMobileMode();
+                // Optional: Add your code here to execute when the condition is false
+            }
+
+        }
+
+        // Check the width initially
+        checkWidth();
+        updateDropdownAriaLabels();
+        activateSkipNavKeyBoardHandler()
+        // Check the width upon window resize
+        $(window).resize(checkWidth);
+
+        if(left_sidebar_button){
+            _debugLog('[sidenav]: left_sidebar_button element value => '+ left_sidebar_button)
+
+            left_sidebar_button.on("click", function () {
+                if (!desktopMode) {
+                    // Assuming each toggle button is directly related to its submenu
+                    var submenu = $(this).next('.sidebar-menu');
+
+                    // Toggle the visibility of the submenu related to the clicked button
+                    submenu.toggle();
+                    _debugLog("[sidenav]: Submenu was toggled.");
+
+                    // Save the state of the menu-dropdown
+                    var menu_dropdown_is_visible = submenu.is(":visible");
+                    _debugLog("[sidenav]: menu_dropdown_is_visible => " + menu_dropdown_is_visible);
+
+                    // Update aria-expanded for accessibility
+                    $(this).attr("aria-expanded", menu_dropdown_is_visible);
+
+                    // Optionally toggle the icon class if there is one
+                    $(this).find('.subnav-toggle-icon').toggleClass('rotated');
+                }
+            });
+            $('button.sidebar-menu-heading').on('click', function() {
+                let $icon = $(this).find('.subnav_toggle_icon svg');
+                let $menu = $(this).next('.sidebar-menu');
+                // Toggle 'rotated' class on the parent of the icon
+                if(!desktopMode){
+                    $icon.parent().toggleClass('rotated');
+                    // Check if 'rotated' class is present and apply the appropriate transformation
+                    if ($icon.parent().hasClass('rotated')) {
+                        $icon.css('transform', 'rotate(180deg)');
+                        $($menu).attr('data-state','opened');
+                        // localStorage.setItem('menu_' + $('button.sidebar-menu-heading').index(this), true);
+                    } else {
+                        $icon.css('transform', '');
+                        $($menu).attr('data-state','closed')
+                        // localStorage.setItem('menu_' + $('button.sidebar-menu-heading').index(this), false);
+                    }
+                }
+            });
+        }
+
+
+        function RunDesktopMode(){
+            if(left_sidebar_button && desktopMode){
+                left_sidebar_menu.show();
+                _debugLog("[sidenav]: left_sidebar_menu was forced to expand (Desktop Mode).")
+            }
+        }
+
+        function RunMobileMode(){
+            if(left_sidebar_button && !desktopMode){
+                $(left_sidebar_menu).each(function () {
+                    let dataState = $(this).attr('data-state');  // Get the 'data-state' attribute
+                    if (typeof dataState === 'undefined'){$(this).attr('data-state','closed');}
+                    // console.log('data-state => ' + dataState);  // Log the value of 'data-state'
+                    if(dataState==='closed'){$(this).hide();}
+                    if(dataState==='opened'){$(this).show();}
+                })
+            }
+        }
+
+        function ConvertSideBarContent(){
+
+            leftside_content_id = $("#leftside-content");
+            does_leftside_content_id_exist = leftside_content_id.length > 0;
+            _debugLog('[sidenav]: leftside_content_id => '+ leftside_content_id);
+            _debugLog('[sidenav]: does_leftside_content_id_exist => '+ does_leftside_content_id_exist);
+
+
+            // If leftside-content does not exist
+            if (!does_leftside_content_id_exist) {
+                // HTML content to be injected
+                let htmlContent = '<div class="skip-leftnav"><a href="#leftside-content" class="element-invisible element-focusable block mb-2">Skip Section Navigation</a></div>';
+
+                // Find the target element where the HTML should be injected before
+                let targetElement = $(".sidebar-left");
+                let mainClassDivElement = $('div[class="main"]');
+                let leftSidenavHeadingElement = $('div[class="sidebar-menu-heading"]');
+                // console.log('textval => ' + textval);
+
+                if(targetElement.length > 0){
+                    // Injecting the HTML content before the target element
+                    mainClassDivElement.before($('.sidebar-left'));
+                    leftSidenavHeadingElement.before(htmlContent);
+                    updateSidebarMenuHeading(leftSidenavHeadingElement);
+                    injectLeftSideContentDiv();
+                }
+                else{
+                    _debugLog('[sidenav]: .sidebar-left .sidebar-menu-heading is missing, no conversion will be applied.');
+                }
+
+            }
+            else{
+
+                let htmlContent = '<div class="skip-leftnav"><a href="#main-content" class="element-invisible element-focusable block mb-2">Skip Left Sidebar</a></div>';
+
+                // Check if both elements exist inside #leftside-content
+                let hasDiv = leftside_content_id.find('div.sidebar-menu-heading').length > 0;
+                let hasUl = leftside_content_id.find('ul.sidebar-menu').length > 0;
+                let leftSidenavHeadingElement = $('div#leftside-content > div.sidebar-menu-heading');
+                if (hasDiv && hasUl) {
+                    console.log("Found another sidebar menu within #leftside-content. Applying transformation.");
+                    leftside_content_id.addClass('mt-3');
+                    leftSidenavHeadingElement.before(htmlContent);
+                    updateSidebarMenuHeading(leftSidenavHeadingElement);
+                } else {
+                    console.log("One or both elements are missing.");
+                }
+                _debugLog('[sidenav]: This page is using the correct elements. updateSidebarMenuHeading() &  moveSidebarLeftBeforeMain() will be ommited.' )
+            }
+        }
+
+        function updateSidebarMenuHeading(leftSidenavHeadingElement) {
+            // Select all div elements with the class 'sidebar-menu-heading'
+
+            $(leftSidenavHeadingElement).addClass('sidebar-menu-toggle');
+
+            $(".sidebar-menu-heading.sidebar-menu-toggle").each(function() {
+
+                let nav_title = $(this).text()
+
+                // console.log('[debug]: nav_title => '+ nav_title);
+                //we create a span for the title in order to properly structure the nav section.
+                let span_subnav_section_title = $('<span>', {
+                    class: 'subnav_section_title',
+                    html: nav_title // Transfers the inner HTML from the div to the new span.
+                });
+                //we create the HTML span for the SVG carret.
+                let span_subnav_toggle_icon = $('<span>',{
+                    class: 'subnav_toggle_icon',
+                    html: `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" role="img" viewBox="0 0 320 512" class="svg-inline--fa fa-caret-down fa-w-10" style="">
+                        <path fill="white" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z" class=""></path></svg>`
+                });
+
+                // we create a button to update the old div structure.
+                let button = $('<button>', {
+                    class: 'sidebar-menu-heading sidebar-menu-toggle',
+                    type: 'button',
+                });
+
+                //we nest the previous spans inside the new button.
+                button.append(span_subnav_section_title, span_subnav_toggle_icon);
+
+                // Replace the current div with the newly created button
+                $(this).replaceWith(button);
+                _debugLog('[sidenav]: sidebar menu heading converted to button.');
+            });
+        }
+        function injectLeftSideContentDiv(){
+            if ($('#leftside-content').length === 0) {
+
+                var htmlContent = '<div id="leftside-content"></div>';
+                // Find the '.sidebar-menu' element and inject the div after it
+                $('.sidebar-menu').after(htmlContent);
+                _debugLog('[sidenav]: #leftside-content id was not found on this structure, we will inject it automatically after the .sidebar-menu');
+            }
+
+        }
+
+        function updateDropdownAriaLabels(){
+            // Select each button within list items that have the class 'has-dropdown' and are direct children of 'ul.sidebar-menu'
+//             $('ul.sidebar-menu > li.has-dropdown').each(function() {
+//                 var context = $(this).find('a').first().text().trim(); // Get the text from the first <a> tag
+//                 var newLabel = `Toggle ${context} menu`; // Construct the new aria-label
+//                 $(this).find('button').attr('aria-label', newLabel); // Update the aria-label of the button
+//             });
+            $('ul.sidebar-menu > li.has-dropdown, ul.sidebar-sub > li.has-dropdown').each(function() {
+                var context = $(this).find('a').first().text().trim();
+                var newLabel = `Toggle ${context} menu`;
+                $(this).find('button').attr('aria-label', newLabel);
+            });
+        }
+
+        function activateSkipNavKeyBoardHandler(){
+            $('div.skip-leftnav > a.element-focusable, ul.sidebar-menu > li > a, ul.sidebar-sub > li > a').keydown(function(event) {
+                if (event.code === 'Space' || event.keyCode === 32) {
+                    event.preventDefault();
+                    window.location.href = $(this).attr('href');
+                }
+            });
+        }
+    }
+
+
+
+
+
+})
+
